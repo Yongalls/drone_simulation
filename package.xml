@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>drone_simulation</name>
+  <version>0.1.0</version>
+  <description>The drone simulation package</description>
+
+  <maintainer email="lym7505@kaist.ac.kr">Youngmin Lee</maintainer>
+  <license>BSD</license>
+  <url type="website">http://wiki.ros.org/beginner_tutorials</url>
+  <author email="lym7505@kaist.ac.kr">Youngmin Lee</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>mavros_msgs</build_depend>
+
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>mavros_msgs</exec_depend>
+
+</package>
