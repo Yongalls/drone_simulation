@@ -96,10 +96,18 @@ int main(int argc, char **argv)
     ROS_INFO("RECTENGULAR PATH FLYING BY VELOCITY START");
 
     int count = 0;
+    double prev_position_x;
+    double prev_position_y;
+    double prev_position_z;
+
     while (ros::ok()){
-        vel.linear.x = (setpoints[count % 4][0] - current_pose.pose.position.x);
-        vel.linear.y = (setpoints[count % 4][1] - current_pose.pose.position.y);
-        vel.linear.z = (setpoints[count % 4][2] - current_pose.pose.position.z);
+        vel.linear.x =  0.8 * (setpoints[count % 4][0] - current_pose.pose.position.x) - 15 * (current_pose.pose.position.x - prev_position_x);
+        vel.linear.y = 0.8 * (setpoints[count % 4][1] - current_pose.pose.position.y) - 15 * (current_pose.pose.position.y - prev_position_y);
+        vel.linear.z = 0.8 * (setpoints[count % 4][2] - current_pose.pose.position.z) - 15 * (current_pose.pose.position.z - prev_position_z);
+
+        prev_position_x = current_pose.pose.position.x;
+        prev_position_y = current_pose.pose.position.y;
+        prev_position_z = current_pose.pose.position.z;
 
         if (sqrt(pow(vel.linear.x, 2) + pow(vel.linear.y, 2) + pow(vel.linear.z, 2)) < 0.1){
             count += 1;
