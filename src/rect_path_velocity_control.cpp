@@ -19,15 +19,13 @@ void pose_cb(const geometry_msgs::PoseStamped::ConstPtr& msg){
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "offboard_controller");
+    ros::init(argc, argv, "rect_path_velocity_control");
     ros::NodeHandle nh;
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
             ("mavros/state", 10, state_cb);
     ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>
             ("/mavros/local_position/pose", 10, pose_cb);
-    ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
-            ("mavros/setpoint_position/local", 10);
     ros::Publisher local_vel_pub = nh.advertise<geometry_msgs::Twist>
             ("mavros/setpoint_velocity/cmd_vel_unstamped", 10);
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
@@ -53,14 +51,14 @@ int main(int argc, char **argv)
         {0, 2, 2},
     };
 
-    geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = setpoints[0][0];
-    pose.pose.position.y = setpoints[0][1];
-    pose.pose.position.z = setpoints[0][2];
+    geometry_msgs::Twist vel;
+    vel.linear.x = 0;
+    vel.linear.y = 0;
+    vel.linear.z = 2;
 
     //send a few setpoints before starting
     for(int i = 20; ros::ok() && i > 0; --i){
-        local_pos_pub.publish(pose);
+        local_vel_pub.publish(vel);
         ros::spinOnce();
         rate.sleep();
     }
@@ -89,7 +87,7 @@ int main(int argc, char **argv)
             }
         }
 
-        local_pos_pub.publish(pose);
+        local_vel_pub.publish(vel);
 
         ros::spinOnce();
         rate.sleep();
@@ -97,7 +95,6 @@ int main(int argc, char **argv)
 
     ROS_INFO("RECTENGULAR PATH FLY START");
 
-    geometry_msgs::Twist vel;
     int count = 0;
     while (ros::ok()){
         vel.linear.x = (setpoints[count % 4][0] - current_pose.pose.position.x);
