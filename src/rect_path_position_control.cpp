@@ -11,7 +11,7 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "offboard_controller");
+    ros::init(argc, argv, "rect_path_position_control");
     ros::NodeHandle nh;
 
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-    ROS_INFO("RECTENGULAR PATH FLY START");
+    ROS_INFO("RECTENGULAR PATH FLYING BY POSITION START");
     last_request = ros::Time::now();
 
     while (ros::ok()){

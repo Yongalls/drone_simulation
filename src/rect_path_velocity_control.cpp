@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
-    ROS_INFO("RECTENGULAR PATH FLY START");
+    ROS_INFO("RECTENGULAR PATH FLYING BY VELOCITY START");
 
     int count = 0;
     while (ros::ok()){
