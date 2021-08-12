@@ -4,6 +4,8 @@
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 
+#define RATE 20
+
 mavros_msgs::State current_state;
 void state_cb(const mavros_msgs::State::ConstPtr& msg){
     current_state = *msg;
@@ -24,7 +26,7 @@ int main(int argc, char **argv)
             ("mavros/set_mode");
 
     //the setpoint publishing rate MUST be faster than 2Hz
-    ros::Rate rate(20.0);
+    ros::Rate rate(RATE);
 
     // wait for FCU connection
     while(ros::ok() && !current_state.connected){
@@ -32,13 +34,22 @@ int main(int argc, char **argv)
         rate.sleep();
     }
 
+    // rectengular path
+    double setpoints [4][3] = 
+    {
+        {0, 0, 2},
+        {2, 0, 2},
+        {2, 2, 2},
+        {0, 2, 2},
+    };
+
     geometry_msgs::PoseStamped pose;
-    pose.pose.position.x = 0;
-    pose.pose.position.y = 0;
-    pose.pose.position.z = 2;
+    pose.pose.position.x = setpoints[0][0];
+    pose.pose.position.y = setpoints[0][1];
+    pose.pose.position.z = setpoints[0][2];
 
     //send a few setpoints before starting
-    for(int i = 20; ros::ok() && i > 0; --i){
+    for(int i = RATE; ros::ok() && i > 0; --i){
         local_pos_pub.publish(pose);
         ros::spinOnce();
         rate.sleep();
@@ -52,7 +63,7 @@ int main(int argc, char **argv)
 
     ros::Time last_request = ros::Time::now();
 
-    while(ros::ok() && !current_state.armed && (ros::Time::now() - last_request < ros::Duration(10.0))){
+    while(ros::ok() && !current_state.armed){
         if( current_state.mode != "OFFBOARD" && (ros::Time::now() - last_request > ros::Duration(1.0))){
             if( set_mode_client.call(offb_set_mode) && offb_set_mode.response.mode_sent){
                 ROS_INFO("Offboard enabled");
@@ -75,50 +86,26 @@ int main(int argc, char **argv)
     }
 
     ROS_INFO("RECTENGULAR PATH FLYING BY POSITION START");
-    last_request = ros::Time::now();
+    
+    // wait for locating initial setpoint
+    for(int i = RATE * 5; ros::ok() && i > 0; --i){
+        local_pos_pub.publish(pose);
+        ros::spinOnce();
+        rate.sleep();
+    }
+    
+    int clock = 0;
+    int count;
 
     while (ros::ok()){
+        count = clock / (RATE * 5);
+        pose.pose.position.x = setpoints[count % 4][0] + (double)(setpoints[count % 4 + 1][0] - setpoints[count % 4][0]) * (double)(clock % (RATE * 5)) / (double)(RATE * 5);
+        pose.pose.position.y = setpoints[count % 4][1] + (double)(setpoints[count % 4 + 1][1] - setpoints[count % 4][1]) * (double)(clock % (RATE * 5)) / (double)(RATE * 5);
+        clock += 1;
 
-        while(ros::ok() && (ros::Time::now() - last_request < ros::Duration(10.0))){
-            pose.pose.position.x = 2;
-            pose.pose.position.y = 0;
-            local_pos_pub.publish(pose);
-    
-            ros::spinOnce();
-            rate.sleep();
-        }
-        last_request = ros::Time::now();
-    
-        while(ros::ok() && (ros::Time::now() - last_request < ros::Duration(10.0))){
-            pose.pose.position.x = 2;
-            pose.pose.position.y = 2;
-            local_pos_pub.publish(pose);
-    
-            ros::spinOnce();
-            rate.sleep();
-        }
-        last_request = ros::Time::now();
-    
-        while(ros::ok() && (ros::Time::now() - last_request < ros::Duration(10.0))){
-            pose.pose.position.x = 0;
-            pose.pose.position.y = 2;
-            local_pos_pub.publish(pose);
-    
-            ros::spinOnce();
-            rate.sleep();
-        }
-        last_request = ros::Time::now();
-    
-        while(ros::ok() && (ros::Time::now() - last_request < ros::Duration(10.0))){
-            pose.pose.position.x = 0;
-            pose.pose.position.y = 0;
-            local_pos_pub.publish(pose);
-    
-            ros::spinOnce();
-            rate.sleep();
-        }
-        last_request = ros::Time::now();
-
+        local_pos_pub.publish(pose);
+        ros::spinOnce();
+        rate.sleep();
     }
 
 
